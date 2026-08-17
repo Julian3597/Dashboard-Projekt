@@ -25,6 +25,10 @@ class Exam:
 
     @property
     def status(self):
+        """Represents an exams current part of the grading process.
+           Is an enum value, but can also be set as a string or int and will
+            be automatically converted to the equivalent ExamStatus value.
+        """
         return self._status
 
     @status.setter
@@ -50,7 +54,9 @@ class Module:
 
     def __post_init__(self):
         if not self.id:
-            self.id = "PLACEHOLDER_ID"
+            self.id = "MODULE_ID"
+            self.name = "MODULE_NAME"
+            self.description = "MODULE_DESCRIPTION"
 
     @property
     def ects(self) -> int:
@@ -97,8 +103,11 @@ class DegreeProgram:
 
     @property
     def spent_ects(self) -> int:
+        """Returns the total ECTS of all modules in DegreeProgram"""
         return sum(module.ects for module in self.modules)
     def add_module(self, module: Module) -> None:
+        """Adds a module to the DegreeProgram"""
         self.modules.append(module)
     def remove_module(self, module: Module) -> None:
+        """Removes a module from the DegreeProgram"""
         self.modules.remove(module)

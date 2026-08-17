@@ -15,12 +15,15 @@ if TYPE_CHECKING:
 
 # ABCs
 class Refreshable(ABC):
+    """ABC for UI components that can update their displayed state."""
     @abstractmethod
     def refresh(self) -> None:
+        """Refresh components' displayed values"""
         pass
 
 # Subobjects
 class ModuleCard(tk.Frame, Refreshable):
+    """Display a summary of a module's data as a clickable card."""
     controller: DashboardController
     _event_manager: EventManager
     module: Module
@@ -74,10 +77,11 @@ class ModuleCard(tk.Frame, Refreshable):
     def _on_click(self, event: tk.Event) -> None:
         self.controller.select_module(self.module)
 
-    def _truncate_text(self, text: str, max_pixel_length: int, fontname="TkDefaultFont") -> str:
+    @staticmethod
+    def _truncate_text(text: str, max_pixel_length: int, fontname="TkDefaultFont") -> str:
         label_font = font.nametofont(fontname)
         truncated = False
-        text = text.replace('\n', ' ')
+        text = text.replace("\n", " ")
         while label_font.measure(text + "...") > max_pixel_length:
             text = text[:-1]
             truncated = True
@@ -86,6 +90,7 @@ class ModuleCard(tk.Frame, Refreshable):
         return text
 
     def _conditional_grade_display(self) -> None:
+        """Show the grade for passed exams, otherwise exam status."""
         for widget in (self.exam_status_text, self.exam_grade_text):
             try:
                 if widget.winfo_exists():
@@ -106,7 +111,8 @@ class ModuleCard(tk.Frame, Refreshable):
             self.module_exam_grade.set(self.module.exam.grade)
             self.module_exam_status.set(self.module.exam.status.name)
 
-    def destroy(self):
+    def destroy(self) -> None:
+        # Unsubscribe from EventManager before this gets destroyed properly
         self._event_manager.unsubscribe("module_updated", self._on_module_updated)
         super().destroy()
 
@@ -117,6 +123,7 @@ class ModuleCard(tk.Frame, Refreshable):
 
 # Views
 class ListView(tk.Frame, Refreshable):
+    """Display all modules as a scrollable list of module cards."""
     controller: DashboardController
     _event_manager: EventManager
     module_cards: list[ModuleCard]
@@ -155,7 +162,8 @@ class ListView(tk.Frame, Refreshable):
         card.pack(pady=10, fill="x", padx=20)
         self.module_cards.append(card)
 
-    def _generate_module_cards(self):
+    def _generate_module_cards(self) -> None:
+        """Rebuild list module_cards from controller state."""
         for card in self.module_cards:
             card.destroy()
         self.module_cards.clear()
@@ -179,6 +187,7 @@ class ListView(tk.Frame, Refreshable):
 
 
 class DetailView(tk.Frame):
+    """Display and edit the details of selected module."""
     controller: DashboardController
     _event_manager: EventManager
     is_editable: bool
@@ -289,7 +298,7 @@ class DetailView(tk.Frame):
             self.course_description_entry.delete("1.0", tk.END)
             self.course_description_entry.insert("1.0", module.description)
 
-    def _clear_fields(self):
+    def _clear_fields(self) -> None:
             self.course_id.set("")
             self.course_title.set("")
             self.course_ects.set(0)
@@ -298,14 +307,18 @@ class DetailView(tk.Frame):
             self.exam_status.set(self._status_list[0])
             self.course_description_entry.delete("1.0", tk.END)
 
-    def _bind_field(self, var: tk.Variable, attribute: str, update_method: Callable[[object, str, object], None]):
+    def _bind_field(self, var: tk.Variable, attribute: str, update_method: Callable[[object, str, object], None]) -> None:
+        """Bind Tkinter variable to module attribute.
+            Everytime variable gets updated, calls specified controller update method.
+        """
         def callback(variable_name, index, operation) -> None:
                 try:
                     var_value = var.get()
                 except _tkinter.TclError:
                     return
                 if var_value is not None:
-                    update_method(self.controller.selected_module, attribute, var_value)
+                    if self.controller.selected_module is not None:
+                        update_method(self.controller.selected_module, attribute, var_value)
         var.trace_add("write", callback)
 
     def _bind_exam_field(self, var: tk.Variable, attribute: str) -> None:
@@ -345,7 +358,8 @@ class DetailView(tk.Frame):
         else:
             self._lock()
 
-    def _lock(self):
+    def _lock(self) -> None:
+        """Disable all editable fields and the delete button."""
         self.course_id_entry.config(state=tk.DISABLED)
         self.course_title_entry.config(state=tk.DISABLED)
         self.course_description_entry.config(state=tk.DISABLED)
@@ -355,7 +369,8 @@ class DetailView(tk.Frame):
         self.exam_grade_entry.config(state=tk.DISABLED)
         self.delete_module_button.config(state=tk.DISABLED)
 
-    def _unlock(self):
+    def _unlock(self) -> None:
+        """Enable all editable fields and the delete button."""
         self.course_id_entry.config(state=tk.NORMAL)
         self.course_title_entry.config(state=tk.NORMAL)
         self.course_description_entry.config(state=tk.NORMAL)
@@ -366,6 +381,7 @@ class DetailView(tk.Frame):
         self.delete_module_button.config(state=tk.NORMAL)
 
     def toggle_editable(self) -> None:
+        """Toggle access to editable fields."""
         self.is_editable = not self.is_editable
         self._update_editable()
 
@@ -377,6 +393,7 @@ class DetailView(tk.Frame):
 
 
 class EctsView(tk.Frame, Refreshable):
+    """Display the number of ECTS credits used relative to the maximum."""
     controller: DashboardController
     _event_manager: EventManager
     def __init__(self, master: tk.Misc, controller: DashboardController, event_manager: EventManager) -> None:
@@ -397,8 +414,9 @@ class EctsView(tk.Frame, Refreshable):
     def refresh(self):
         self.text_var.set(f"{self.controller.state.spent_ects} out of {self.controller.state.max_ects} used")
 
-# Takes controller, resolution and 3 UI Classes as arguments, detail_view: left 50%, list_view: right bottom 66%, ects_view: right top 33%
+# Takes controller, resolution and 3 UI Classes as arguments, detail_view: left 50%, list_view: bottom right 66%, ects_view: top right 33%
 class ViewContainer(tk.Tk, Refreshable):
+    """Dashboard View Class Containers"""
     controller: DashboardController
     _event_manager: EventManager
     detail_view: Refreshable
@@ -432,6 +450,7 @@ class ViewContainer(tk.Tk, Refreshable):
         self.protocol("WM_DELETE_WINDOW", self._on_closing)
 
     def _configure_grid(self) -> None:
+        """Configure grid layout and resizing behavior."""
         # Grid Config
         # Set a minsize to hopefully avoid grid resizing
         self.grid_columnconfigure(0, weight=2, minsize=700)  # left 2/3
@@ -448,6 +467,7 @@ class ViewContainer(tk.Tk, Refreshable):
         return right
 
     def _on_closing(self) -> None:
+        """On close: save application state and close the main window."""
         self.controller.save()
         self.destroy()
 
