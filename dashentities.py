@@ -1,6 +1,5 @@
 from dataclasses import dataclass, field
 from enum import Enum, auto
-from typing import Tuple, Any
 
 class ExamStatus(Enum):
     NOT_TAKEN = auto()
