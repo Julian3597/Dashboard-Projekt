@@ -9,4 +9,4 @@ Python 3.14.x
    ```python main.py```
 
 Die Speicherdatei wird automatisch unter dem Namen „save.json“ erstellt.
-Es wird automatisch gespeichert, wenn das Program geschlossen wird und automatisch aus dieser Datei geladen, wenn das Program wieder gestartet wird.
+Es wird automatisch gespeichert, wenn das Programm geschlossen wird und automatisch aus dieser Datei geladen, wenn das Programm wieder gestartet wird.
