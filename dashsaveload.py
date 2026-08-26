@@ -51,4 +51,4 @@ class JSONDashboardRepository(DashboardRepository):
     @staticmethod
     def _write_state_to_file(path: str, data: DegreeProgram) -> None:
         with open(path, "w") as file:
-            json.dump(asdict(data), file, indent=4, default=lambda x: x.value)  # lambda for enums
+            json.dump(asdict(data), file, indent=4, default=lambda x: x.name)  # lambda for enums
