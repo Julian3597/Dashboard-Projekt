@@ -491,10 +491,6 @@ class ViewContainer(tk.Tk, Refreshable):
         self._degree_title_var = tk.StringVar(value=self.controller.state.degree_title.name)
         titles = tk.Menu(degree_program_menu, tearoff=False)
 
-        print(self.controller.state.degree_title)
-        print(self.controller.state.degree_title.name)
-        print([d.name for d in DegreeTitle])
-
         for degree_title in DegreeTitle:
             titles.add_radiobutton(
                 label=degree_title.name,
