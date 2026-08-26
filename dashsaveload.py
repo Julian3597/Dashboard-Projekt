@@ -40,7 +40,7 @@ class JSONDashboardRepository(DashboardRepository):
                 raw_degreeprogram = json.load(file)
         except FileNotFoundError:
                 return self._create_default_state()
-        degree_program = DegreeProgram(raw_degreeprogram["max_ects"], raw_degreeprogram["degree_title"], raw_degreeprogram["duration_months"])
+        degree_program = DegreeProgram(max_ects=raw_degreeprogram["max_ects"], _degree_title=raw_degreeprogram["_degree_title"], duration_months=raw_degreeprogram["duration_months"])
 
         for module_data in raw_degreeprogram["modules"]:
             exam = Exam(**module_data["_exam"]) if module_data["_exam"] else None

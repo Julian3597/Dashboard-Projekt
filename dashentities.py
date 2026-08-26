@@ -95,18 +95,41 @@ class Module:
 @dataclass
 class DegreeProgram:
     max_ects: int
-    degree_title: DegreeTitle
+    _degree_title: DegreeTitle
     duration_months: int
     modules: list[Module] = field(default_factory=list, init=False, repr=False)
 
+    def __post_init__(self):
+        self.degree_title = self._degree_title
 
     @property
     def spent_ects(self) -> int:
         """Returns the total ECTS of all modules in DegreeProgram"""
         return sum(module.ects for module in self.modules)
+
+    @property
+    def degree_title(self):
+        """Represents"""
+        return self._degree_title
+
+    @degree_title.setter
+    def degree_title(self, value):
+        if value is None:
+            #fallback value
+            self._degree_title = DegreeTitle.OTHER
+        elif isinstance(value, str):
+            self._degree_title = DegreeTitle[value]  # by name
+        elif isinstance(value, int):
+            self._degree_title = DegreeTitle(value)  # by value
+        elif isinstance(value, DegreeTitle):
+            self._degree_title = value
+        else:
+            raise TypeError("degree_title must be a string, int, or DegreeTitle")
+
     def add_module(self, module: Module) -> None:
         """Adds a module to the DegreeProgram"""
         self.modules.append(module)
+
     def remove_module(self, module: Module) -> None:
         """Removes a module from the DegreeProgram"""
         self.modules.remove(module)
