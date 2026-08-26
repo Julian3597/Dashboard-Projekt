@@ -21,7 +21,7 @@ class DashboardController:
 
     def create_module(self) -> Module:
         """Creates a new module and publishes 'module_created' event."""
-        module = Module("")
+        module = Module(id="", _exam=Exam())
         self.state.add_module(module)
         self.event_manager.publish("module_created", module)
         return module

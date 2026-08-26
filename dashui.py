@@ -133,20 +133,26 @@ class ListView(tk.Frame, Refreshable):
         self.controller = controller
         self._event_manager = event_manager
         self.module_cards = []
+
         # Header
         tk.Label(self, text="List View", bg="lightblue", font=("Arial", 24)).pack(side="top")
+
         # Module Container
         self.container = tk.Canvas(self, width=400, height=300, bg="lightblue")
         scrollbar = tk.Scrollbar(self, orient="vertical", command=self.container.yview)
         scrollbar.pack(side="right", fill="y")
         self.container.configure(yscrollcommand=scrollbar.set)
         self.container.bind("<Configure>", self._resize_content)
-        self.container.bind_all("<MouseWheel>",lambda e: self.container.yview_scroll(-e.delta // 120, "units"))
+        self.container.bind_all("<MouseWheel>",
+            lambda e:
+            self.container.yview_scroll(-e.delta // 120, "units")
+            if self.container.yview() != (0.0, 1.0)
+            else None
+        )
         self.container.pack(side="left", fill="both", expand=True)
         self.container_content = tk.Frame(self.container, bg="lightblue")
         self.container_content.bind("<Configure>",lambda e: self.container.configure(scrollregion=self.container.bbox("all")))
         self.window = self.container.create_window((0, 0), window=self.container_content, anchor="nw")
-        # Populate module cards
 
         # New Modules Button
         tk.Button(self.container_content, text="New Module", width=30, command=lambda: self._new_module()).pack(side="bottom", pady=8)
