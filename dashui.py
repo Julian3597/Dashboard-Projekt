@@ -415,6 +415,11 @@ class EctsView(tk.Frame, Refreshable):
         tk.Label(self, text="ECTS", bg="lightcoral", font=("Arial", 24)).pack(side="top")
         tk.Label(self, textvariable=self.text_var, bg="lightcoral", font=("Arial", 32)).pack(expand=True)
 
+        self._event_manager.subscribe("module_updated", self._on_module_updated)
+
+        self.refresh()
+
+    def _on_module_updated(self, module: Module) -> None:
         self.refresh()
 
     def refresh(self):
