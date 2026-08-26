@@ -2,12 +2,12 @@ from __future__ import annotations
 
 import tkinter as tk
 from abc import ABC, abstractmethod
-from tkinter import OptionMenu, font
+from tkinter import OptionMenu, font, simpledialog
 from typing import TYPE_CHECKING, Callable
 
 import _tkinter
 
-from dashentities import Module, ExamStatus
+from dashentities import Module, ExamStatus, DegreeTitle
 from dashevents import EventManager
 
 if TYPE_CHECKING:
@@ -395,9 +395,6 @@ class DetailView(tk.Frame):
         self.display_module(self.controller.selected_module)
         self._update_editable()
 
-
-
-
 class EctsView(tk.Frame, Refreshable):
     """Display the number of ECTS credits used relative to the maximum."""
     controller: DashboardController
@@ -441,6 +438,7 @@ class ViewContainer(tk.Tk, Refreshable):
         self._event_manager = event_manager
         super().__init__()  # Call Tk init to create a top-level container
         self.geometry(resolution)  # Set frame size to specified resolution
+        self._create_menu()
         self._configure_grid()
         right_grid = self._create_right_grid_container()
 
@@ -481,6 +479,67 @@ class ViewContainer(tk.Tk, Refreshable):
         """On close: save application state and close the main window."""
         self.controller.save()
         self.destroy()
+
+    def _create_menu(self) -> None:
+        """Create application menu bar."""
+        menubar = tk.Menu(self)
+
+        degree_program_menu = tk.Menu(menubar, tearoff=False)
+        degree_program_menu.add_command(label="Max ECTS", command=self._edit_degree_max_ects)
+        degree_program_menu.add_command(label="Duration (months)", command=self._edit_degree_duration)
+
+        self._degree_title_var = tk.StringVar(value=self.controller.state.degree_title.name)
+        titles = tk.Menu(degree_program_menu, tearoff=False)
+
+        print(self.controller.state.degree_title)
+        print(self.controller.state.degree_title.name)
+        print([d.name for d in DegreeTitle])
+
+        for degree_title in DegreeTitle:
+            titles.add_radiobutton(
+                label=degree_title.name,
+                variable=self._degree_title_var,
+                value=degree_title.name,
+                command=lambda d=degree_title: self._set_degree_title(d)
+            )
+
+        degree_program_menu.add_cascade(label="Degree", menu=titles)
+        menubar.add_cascade(label="Degree", menu=degree_program_menu)
+
+        self.config(menu=menubar)
+
+    def _set_degree_title(self, degree_title: DegreeTitle) -> None:
+        self.controller.state.degree_title = degree_title
+        self.refresh()
+
+    def _edit_degree_max_ects(self) -> None:
+        degree = self.controller.state
+
+        value = simpledialog.askinteger(
+            "Max ECTS",
+            "Maximum ECTS:",
+            initialvalue=degree.max_ects,
+            parent=self
+        )
+
+        if value is not None:
+            degree.max_ects = value
+            self.refresh()
+
+    def _edit_degree_duration(self) -> None:
+        degree = self.controller.state
+
+        value = simpledialog.askinteger(
+            "Degree Duration",
+            "Duration in Months:",
+            initialvalue=degree.duration_months,
+            parent=self
+        )
+
+        if value is not None:
+            degree.duration_months = value
+            self.refresh()
+
 
     def refresh(self) -> None:
         self.detail_view.refresh()
